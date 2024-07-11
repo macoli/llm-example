@@ -122,6 +122,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env
+*/.env
+**/*.env
 openai/.env
 .venv
 env/
