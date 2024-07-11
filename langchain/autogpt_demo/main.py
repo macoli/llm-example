@@ -1,12 +1,10 @@
 # 加载环境变量
 from dotenv import load_dotenv, find_dotenv
 import os
-from langchain_community.chat_models import QianfanChatEndpoint
-from langchain_community.embeddings import QianfanEmbeddingsEndpoint
+from langchain_community.chat_models import QianfanChatEndpoint, ChatBaichuan
+from langchain_community.embeddings import QianfanEmbeddingsEndpoint, BaichuanTextEmbeddings
 
 _ = load_dotenv(find_dotenv())
-os.environ['QIANFAN_AK'] = os.getenv("QIANFAN_AK")
-os.environ['QIANFAN_SK'] = os.getenv("QIANFAN_SK")
 
 # 导入ChatOpenAI类和OpenAIEmbeddings类，用于初始化大语言模型
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -60,18 +58,27 @@ def main():
     # db = Chroma.from_documents([Document(page_content="")], OpenAIEmbeddings(model="text-embedding-ada-002"))
 
     # 初始化大语言模型（LLM）， 默认是ERNIE-Bot-turbo
-    llm = QianfanChatEndpoint(
-        model="ERNIE-Bot-turbo",
-        streaming=True
+    # llm = QianfanChatEndpoint(
+    #     model="ERNIE-Bot-turbo",
+    #     streaming=True
+    # )
+    #
+    # # 初始化长时记忆向量数据库，并配置为检索器
+    # db = Chroma.from_documents(documents=[Document(page_content="")], embedding=QianfanEmbeddingsEndpoint())
+
+    # 初始化大语言模型（LLM），使用Baichuan4模型，设置随机种子为42
+    llm = ChatBaichuan(
+        model="Baichuan4",
+        temperature=0,
+        model_kwargs={
+            "seed": 42
+        },
+        streaming=True,
     )
 
-    embed = QianfanEmbeddingsEndpoint(
-        qianfan_ak=os.getenv("QIANFAN_AK"),
-        qianfan_sk=os.getenv("QIANFAN_SK")
-    )
-    print(embed.embed_documents(["hi", "world"]))
     # 初始化长时记忆向量数据库，并配置为检索器
-    db = Chroma.from_documents(documents=[Document(page_content="")], embedding=embed)
+    db = Chroma.from_documents([Document(page_content="")], BaichuanTextEmbeddings())
+
     retriever = db.as_retriever(
         search_kwargs={"k": 1}
     )
